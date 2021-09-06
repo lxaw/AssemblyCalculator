@@ -48,7 +48,11 @@
 			j while
 			
 	handleadd:
-	
+		addi $sp, $sp, -12
+		sw $ra, 8($sp)
+		sw $v0, 4($sp)
+		sw $a0, 0($sp)
+		
 		# print the prompt
 		li $v0, 4
 		la $a0, addprompt
@@ -56,11 +60,19 @@
 		
 		# get number
 		# store the ra
-		addi $sp, $sp, -4
-		sw $ra, 0($sp)
+
 		jal getnumber
-		lw $ra, 0($sp)
-		addi $sp, $sp, 4
+		addi $t0, $v1, 0
+		
+		jal getnumber
+		addi $t1, $v1, 0
+		
+		
+
+		lw $ra, 8($sp)
+		lw $v0, 4($sp)
+		lw $a0, 0($sp)
+		addi $sp, $sp, 12
 		
 		j endoperation
 		
