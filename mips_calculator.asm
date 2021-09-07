@@ -1,16 +1,19 @@
 .data
-	options:	.asciiz "\n0: addition\n1: subtraction\n2: multiplication\n3: division\n4: fibbonacci\n5: factorial\n-1: quit\n"
-	mainprompt:	.asciiz "Please select an option: "
+	options:	.asciiz "\n0: addition\n1: subtraction\n2: multiplication\n3: division\n4: factorial\n-1: quit\n"
+	mainprompt:	.asciiz "Please select an option:\n"
 	newline:	.asciiz "\n"
 	goodbye:	.asciiz "Goodbye!\n"
-	addprompt:	.asciiz "Welcome to addition\n"
-	subprompt:	.asciiz "Welcome to subtraction\n"
-	multprompt:	.asciiz "Welcome to multiplication\n"
-	divprompt:	.asciiz "Welcome to division\n"
-	fibprompt:	.asciiz "Welcome to fib\n"
-	factprompt:	.asciiz "Welcome to fact\n"
+	addprompt:	.asciiz "Enter two numbers:\n"
+	subprompt:	.asciiz "Enter two numbers:\n"
+	multprompt:	.asciiz "Enter two numbers:\n"
+	divprompt:	.asciiz "Enter two numbers:\n"
+	fibprompt:	.asciiz "Enter a number:\n"
+	factprompt:	.asciiz "Enter a number:\n"
 	
-	fibend:		.asciiz "The fib value is: "
+	addend:		.asciiz "The summation is:\n"
+	subend:		.asciiz "The subtraction is:\n"
+	
+	fibend:		.asciiz "The fib value is:\n"
 .text
 	main:
 		while:
@@ -39,13 +42,9 @@
 			beq $v1, $t0, handlediv
 			
 			addi $t0, $zero, 4
-			beq $v1, $t0, handlefib
-			
-			addi $t0, $zero, 5
 			beq $v1, $t0, handlefact
-			
-		endoperation:
-			j while
+	endoperation:
+		j while
 			
 	handleadd:
 		addi $sp, $sp, -12
@@ -67,7 +66,16 @@
 		jal getnumber
 		addi $t1, $v1, 0
 		
+		add $t2, $t0, $t1
 		
+		# print the prompt
+		li $v0, 4
+		la $a0, addend
+		syscall
+
+		addi $a1, $t2, 0
+		jal printint
+
 
 		lw $ra, 8($sp)
 		lw $v0, 4($sp)
@@ -77,6 +85,11 @@
 		j endoperation
 		
 	handlesub:
+		addi $sp, $sp, -12
+		sw $ra, 8($sp)
+		sw $v0, 4($sp)
+		sw $a0, 0($sp)
+		
 		# print the prompt
 		li $v0, 4
 		la $a0, subprompt
@@ -84,11 +97,28 @@
 		
 		# get number
 		# store the ra
-		addi $sp, $sp, -4
-		sw $ra, 0($sp)
+
 		jal getnumber
-		lw $ra, 0($sp)
-		addi $sp, $sp, 4
+		addi $t0, $v1, 0
+		
+		jal getnumber
+		addi $t1, $v1, 0
+		
+		sub $t2, $t0, $t1
+		
+		# print the prompt
+		li $v0, 4
+		la $a0, subend
+		syscall
+
+		addi $a1, $t2, 0
+		jal printint
+
+
+		lw $ra, 8($sp)
+		lw $v0, 4($sp)
+		lw $a0, 0($sp)
+		addi $sp, $sp, 12
 		
 		j endoperation
 		
@@ -105,6 +135,7 @@
 		# get number
 
 		jal getnumber
+		addi $t0, $v1, 0
 		
 		lw $v0, 8($sp)
 		lw $a0, 4($sp)
@@ -114,18 +145,26 @@
 		j endoperation
 		
 	handlediv:
+		addi $sp, $sp, -12
+		sw $ra, 8($sp)
+		sw $v0, 4($sp)
+		sw $a0, 0($sp)
 		# print the prompt
 		li $v0, 4
 		la $a0, divprompt
 		syscall
 		
 		# get number
-		# store the ra
-		addi $sp, $sp, -4
-		sw $ra, 0($sp)
+		
 		jal getnumber
-		lw $ra, 0($sp)
-		addi $sp, $sp, 4
+		addi $a1, $v1, 0
+		
+		jal printint
+
+		lw $ra, 8($sp)
+		lw $v0, 4($sp)
+		lw $a0, 0($sp)
+		addi $sp, $sp, 12
 		
 		j endoperation
 	
@@ -182,83 +221,7 @@
 		mul $v1, $v1, $a1
 		
 		jr $ra
-		
-	
-	handlefib:
-		# print the prompt
-		li $v0, 4
-		la $a0, fibprompt
-		syscall
-		
-		# get number in $v1
-		# store the ra
-		addi $sp, $sp, -4
-		sw $ra, 0($sp)
-		jal getnumber
-		lw $ra, 0($sp)
-		addi $sp, $sp, 4
-		
-		# load the value returned in v1 into a1
-		addi $a1, $v1, 0
-		# call fib with $a1
-		
-		addi $sp, $sp, -4
-		sw $ra, 0($sp)
-		jal fib
-		lw $ra, 0($sp)
-		addi $sp, $sp, 4
-		
-		li $v0, 4
-		la $a0, fibend
-		syscall
-		
-		# print the int
-		li $v0, 1
-		addi $a0, $v1, 0
-		syscall
-		
-		
-		j endoperation
-
-	fib:
-		# if n > 1, recurse
-		bgt $a1, 1, fib_recurse
-		# else, return n
-		addi $v1, $a1, 0
-		jr $ra
-	
-	
-	fib_recurse:
-		# make room on stack
-		addi $sp, $sp, -12
-		# save ra
-		sw $ra, 0($sp)
-		# save s0
-		sw $s0, 4($sp)
-		# s0 = n
-		move $s0, $a1
-		# n-1
-		add $a1, $a1, -1
-		# fib with n-1
-		jal fib
-		# save ret
-		sw $v0, 8($sp) 
-		# call fib n-2
-		add $a1, $s0, -2
-		jal fib
-		# get fib n-1
-		lw $t0, 8($sp)
-		# RETURN VALUE
-		add $v1, $t0, $v1
-		
-		lw $s0, 4($sp)
-		lw $ra, 0($sp)
-		addi $sp, $sp, 12
-		
-		jr $ra
-		
-		
-	
+				
 		
 	printoptions:
 		addi $sp, $sp, -12
@@ -338,10 +301,10 @@
 		lw $a0, 0($sp)
 		addi $sp, $sp, 8
 		
+		jr $ra
+		
 	exit:
-		addi $sp, $sp, -8
-		sw $v0, 4($sp)
-		sw $a0, 8($sp)
+
 		
 		# print new line before
 		# note we don't need to store ret address here
@@ -349,10 +312,6 @@
 		li $v0, 4
 		la $a0, goodbye
 		syscall
-		
-		lw $v0, 4($sp)
-		lw $a0, 8($sp)
-		addi $sp, $sp, 8
 
 	
 	# end the prog
