@@ -1,21 +1,18 @@
 .data
+	welcome:	.asciiz "Welcome to the integer calculator!\nAll calculations are done using integers.\nThis means division may cut off, and factorial might overflow!\n"
 	options:	.asciiz "\n0: addition\n1: subtraction\n2: multiplication\n3: division\n4: factorial\n-1: quit\n"
 	mainprompt:	.asciiz "Please select an option:\n"
 	newline:	.asciiz "\n"
 	goodbye:	.asciiz "Goodbye!\n"
-	addprompt:	.asciiz "Enter two numbers:\n"
-	subprompt:	.asciiz "Enter two numbers:\n"
-	multprompt:	.asciiz "Enter two numbers:\n"
-	divprompt:	.asciiz "Enter two numbers:\n"
-	fibprompt:	.asciiz "Enter a number:\n"
-	factprompt:	.asciiz "Enter a number:\n"
-	
-	addend:		.asciiz "The summation is:\n"
-	subend:		.asciiz "The subtraction is:\n"
-	
-	fibend:		.asciiz "The fib value is:\n"
+	addprompt:	.asciiz "Welcome to addition.\nEnter two integers:\n"
+	subprompt:	.asciiz "Welcome to subtraction.\nEnter two integers:\n"
+	multprompt:	.asciiz "Welcome to mulitiplication.\nEnter two integers:\n"
+	divprompt:	.asciiz "Welcome to division.\nEnter two numbers:\n"
+	factprompt:	.asciiz "Welcome to factorial.\nEnter an integer:\n"
+	finalvalue:	.asciiz "The final value is:\n"
 .text
 	main:
+			jal printwelcome
 		while:
 			# print prompt
 			jal printoptions
@@ -43,7 +40,7 @@
 			
 			addi $t0, $zero, 4
 			beq $v1, $t0, handlefact
-	endoperation:
+
 		j while
 			
 	handleadd:
@@ -67,14 +64,9 @@
 		addi $t1, $v1, 0
 		
 		add $t2, $t0, $t1
-		
-		# print the prompt
-		li $v0, 4
-		la $a0, addend
-		syscall
 
 		addi $a1, $t2, 0
-		jal printint
+		jal printfinalvalue
 
 
 		lw $ra, 8($sp)
@@ -82,7 +74,7 @@
 		lw $a0, 0($sp)
 		addi $sp, $sp, 12
 		
-		j endoperation
+		j while
 		
 	handlesub:
 		addi $sp, $sp, -12
@@ -106,13 +98,10 @@
 		
 		sub $t2, $t0, $t1
 		
-		# print the prompt
-		li $v0, 4
-		la $a0, subend
-		syscall
 
 		addi $a1, $t2, 0
-		jal printint
+		jal printfinalvalue
+
 
 
 		lw $ra, 8($sp)
@@ -120,7 +109,8 @@
 		lw $a0, 0($sp)
 		addi $sp, $sp, 12
 		
-		j endoperation
+		#j endoperation
+		j while
 		
 	handlemult:
 		addi $sp, $sp, -12
@@ -137,18 +127,33 @@
 		jal getnumber
 		addi $t0, $v1, 0
 		
+		jal getnumber
+		addi $t1, $v1, 0
+		
+		# multiply
+		mul $t0, $t0, $t1
+		
+
+		
+		# call "printfinalvalue" with $a1
+		addi $a1, $t0, 0
+		jal printfinalvalue
+
+		
 		lw $v0, 8($sp)
 		lw $a0, 4($sp)
 		lw $ra, 0($sp)
 		addi $sp, $sp, 12
 		
-		j endoperation
+		#j endoperation
+		j while
 		
 	handlediv:
 		addi $sp, $sp, -12
 		sw $ra, 8($sp)
 		sw $v0, 4($sp)
 		sw $a0, 0($sp)
+		
 		# print the prompt
 		li $v0, 4
 		la $a0, divprompt
@@ -157,16 +162,23 @@
 		# get number
 		
 		jal getnumber
-		addi $a1, $v1, 0
+		addi $t0, $v1, 0
 		
-		jal printint
+		jal getnumber
+		addi $t1, $v1, 0
+		
+		div $t0, $t0, $t1
+		
+		# print the value in $a1
+		addi $a1, $t0, 0
+		jal printfinalvalue
 
 		lw $ra, 8($sp)
 		lw $v0, 4($sp)
 		lw $a0, 0($sp)
 		addi $sp, $sp, 12
 		
-		j endoperation
+		j while
 	
 	handlefact:
 		# print the prompt
@@ -191,7 +203,7 @@
 		# pop stack
 		addi $sp, $sp, 4
 
-		j endoperation
+		j while
 		
 		
 	fact:
@@ -269,8 +281,45 @@
 		
 		jr $ra
 		
+	printfinalvalue:
+		addi $sp, $sp, -12
+		sw $a1, 0($sp)
+		sw $ra, 4($sp)
+		sw $a0, 8($sp)
+		
+		# print "the final value is"
+		li $v0, 4
+		la $a0, finalvalue
+		syscall
+		
+		# call print int with $a1, passed to function
+		jal printint
+		
+		jal printnewline
+		
+		lw $a1,0($sp)
+		lw $ra, 4($sp)
+		lw $a0, 8($sp)
+		addi $sp, $sp, 12
+		
+		jr $ra
+		
+	printwelcome:
+		addi $sp, $sp, -8
+		sw $a0, 0($sp)
+		sw $v0, 4($sp)
+		
+		li $v0, 4
+		la $a0, welcome
+		syscall
+		
+		lw $a0, 0($sp)
+		lw $v0, 4($sp)
+		addi $sp, $sp, 8
+		
 	printnewline:
-		addi $sp, $sp,-8
+		addi $sp, $sp,-12
+		sw $ra, 8($sp)
 		sw $a0, 4($sp)
 		sw $v0, 0($sp)
 		
@@ -280,26 +329,28 @@
 		la $a0, newline
 		syscall
 		
+		lw $ra, 8($sp)
 		lw $a0, 4($sp)
 		lw $v0, 0($sp)
-		addi $sp, $sp, 8
+		addi $sp, $sp, 12
 		
 		jr $ra
 	
 	printint:
-		addi $sp, $sp, -8
+		addi $sp, $sp, -12
+		sw $ra, 8($sp)
 		sw $v0, 4($sp)
 		sw $a0, 0($sp)
 		
 		# prints the integer found in $a1
 		li $v0, 1
 		add $a0, $a1, $zero
-		
 		syscall
 		
+		lw $ra, 8($sp)
 		lw $v0, 4($sp)
 		lw $a0, 0($sp)
-		addi $sp, $sp, 8
+		addi $sp, $sp, 12
 		
 		jr $ra
 		
