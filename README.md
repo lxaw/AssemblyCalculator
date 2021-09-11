@@ -2,7 +2,7 @@
 ## A simple calculator in MIPS Assembly.
 
 ## :cinema: Video:
-* Coming soon!
+* https://youtu.be/l9WMU30XdkM
 
 ## :grey_question: What is it?
 * A calculator in Assembly (MIPS).
